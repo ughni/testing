@@ -142,8 +142,8 @@
                             
                             <div>
                                 <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Target Margin (%)</label>
-                                <div class="relative">
-                                    <input type="number" step="0.01" min="0" name="manual_margin" value="{{ old('manual_margin', ($isEdit && $history->margin_percent) ? ($history->margin_percent * 100) : '') }}" class="w-full px-4 py-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-300 dark:border-amber-700/50 rounded-xl focus:ring-2 focus:ring-amber-500 text-slate-800 dark:text-slate-200 transition-colors placeholder-slate-400" placeholder="Otomatis (Kosongi)">
+                               <div class="relative">
+                                    <input type="number" step="0.01" min="0" name="manual_margin" value="{{ old('manual_margin', ($isEdit && $history->margin_percent) ? $history->margin_percent : '') }}" class="w-full px-4 py-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-300 dark:border-amber-700/50 rounded-xl focus:ring-2 focus:ring-amber-500 text-slate-800 dark:text-slate-200 transition-colors placeholder-slate-400" placeholder="Otomatis (Kosongi)">
                                     <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                                         <span class="text-slate-400 font-bold">%</span>
                                     </div>

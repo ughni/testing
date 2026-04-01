@@ -44,14 +44,32 @@ Route::middleware(['auth'])->group(function () {
 
 // 🥈 KASTA 2: MANAGER & ADMINISTRATOR SAJA (Staff ditendang 403)
 Route::middleware(['auth', 'role:administrator,manager'])->group(function () {
-    Route::get('/', function () {
-        $dailyPricings = \App\Models\DailyPricing::with('product')
+Route::get('/', function (\Illuminate\Http\Request $request) {
+        // 1. Siapkan mesin pencari dasar
+        $query = \App\Models\DailyPricing::with('product')
             ->orderBy('date_input', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-        return view('welcome', compact('dailyPricings'));
-    })->name('dashboard');
+            ->orderBy('created_at', 'desc');
 
+        // 2. Tangkap sinyal klik dari tombol dashboard (contoh: ?status=yellow)
+        $statusFilter = $request->query('status');
+
+        // 3. Logika Filter Database (Mata Elang)
+        if ($statusFilter === 'red') {
+            $query->whereIn('status_margin', ['RED', 'Rugi']); 
+        } elseif ($statusFilter === 'yellow') {
+            $query->where('status_margin', 'YELLOW');
+        } elseif ($statusFilter === 'green') {
+            // Hijau adalah yang bukan Merah dan bukan Kuning
+            $query->whereNotIn('status_margin', ['RED', 'Rugi', 'YELLOW']);
+        }
+
+        // 4. Eksekusi paginasi 10 data
+        $dailyPricings = $query->paginate(10);
+
+        // 5. Kirim data dan status filter yang lagi aktif ke Blade
+        return view('welcome', compact('dailyPricings', 'statusFilter'));
+    })->name('dashboard');
+    
     // Modul Purchase Plan (Ruang Kerja Manager)
     Route::get('/purchase-plan', [PurchasePlanController::class, 'index'])->name('process_plan.index');
     Route::post('/purchase-plan/approve/{id}', [PurchasePlanController::class, 'approve'])->name('process_plan.approve');
