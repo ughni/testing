@@ -18,6 +18,11 @@ class PricingEngineController extends Controller
 
     public function calculate(Request $request)
     {
+        if ($request->filled('demand')) {
+    $request->merge([
+        'demand' => strtolower($request->demand)
+    ]);
+}
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'date_input' => 'required|date|before_or_equal:today',
@@ -175,6 +180,11 @@ class PricingEngineController extends Controller
 
     public function updateHistory(Request $request, $id)
     {
+        if ($request->filled('demand')) {
+    $request->merge([
+        'demand' => strtolower($request->demand)
+    ]);
+}
         $request->validate([
             'product_id' => 'required',
             'date_input' => 'required|date',

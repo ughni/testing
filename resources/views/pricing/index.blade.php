@@ -4,7 +4,6 @@
 
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
 <style>
-    /* Penyesuaian agar Tom Select mirip dengan desain Tailwind lu */
     .ts-control { padding: 0.75rem 1rem; border-radius: 0.75rem; border: 1px solid #e2e8f0; background-color: #f8fafc; font-weight: 500; }
     .dark .ts-control { background-color: rgba(15, 23, 42, 0.5); border-color: #334155; color: #f1f5f9; }
     .dark .ts-dropdown { background-color: #1e293b; border-color: #334155; color: #f1f5f9; }
@@ -51,36 +50,6 @@
         </div>
     @endif
 
-    @if(session('success'))
-        @php
-            $bgClass = 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 text-blue-800 dark:text-blue-300';
-            $iconBtn = 'text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-800';
-            $icon = 'ℹ️';
-            
-            if (str_contains(session('success'), 'Naikkan Harga!')) {
-                $bgClass = 'bg-red-50 dark:bg-red-900/20 border-red-500 text-red-800 dark:text-red-300';
-                $iconBtn = 'text-red-500 hover:bg-red-100 dark:hover:bg-red-800';
-                $icon = '🔴';
-            } elseif (str_contains(session('success'), 'Sesuaikan Harga')) {
-                $bgClass = 'bg-amber-50 dark:bg-amber-900/20 border-amber-500 text-amber-800 dark:text-amber-300';
-                $iconBtn = 'text-amber-500 hover:bg-amber-100 dark:hover:bg-amber-800';
-                $icon = '🟡';
-            } elseif (str_contains(session('success'), 'Pertahankan Harga')) {
-                $bgClass = 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500 text-emerald-800 dark:text-emerald-300';
-                $iconBtn = 'text-emerald-500 hover:bg-emerald-100 dark:hover:bg-emerald-800';
-                $icon = '🟢';
-            }
-        @endphp
-        
-        <div class="mb-8 flex items-start p-4 border-l-4 rounded-r-2xl shadow-sm transition-all relative pr-12 {{ $bgClass }}">
-            <div class="text-xl mr-3 mt-0.5">{{ $icon }}</div>
-            <div>
-                <h3 class="text-sm font-bold uppercase tracking-wider opacity-80 mb-1">Hasil Kalkulasi Sistem</h3>
-                <p class="font-medium text-base sm:text-lg">{{ session('success') }}</p>
-            </div>
-        </div>
-    @endif
-
     <div class="bg-white dark:bg-[#1e293b] rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors duration-300">
         <div class="bg-black px-6 sm:px-8 py-5 border-b border-slate-700">
             <h5 class="m-0 font-bold text-white text-lg flex items-center">
@@ -100,18 +69,22 @@
                         <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Pilih Produk <span class="text-red-500">*</span></label>
                         <div class="relative">
                             <select id="select-produk" name="product_id" class="w-full text-slate-800 dark:text-slate-200 font-medium" required>
-                                <option value="">-- Ketik untuk mencari produk... --</option>
+                                <option value="" data-yield="95" data-buffer="5" data-threshold="20">-- Ketik untuk mencari produk... --</option>
                                 @foreach($products as $p)
-                                    <option value="{{ $p->id }}" {{ old('product_id', $isEdit ? $history->product_id : '') == $p->id ? 'selected' : '' }}>
+                                    <option value="{{ $p->id }}" 
+                                        data-yield="{{ $p->yield_percent ?? 95 }}" 
+                                        data-buffer="{{ $p->buffer ?? 5 }}" 
+                                        data-threshold="{{ $p->threshold ?? 20 }}"
+                                        {{ old('product_id', $isEdit ? $history->product_id : '') == $p->id ? 'selected' : '' }}>
                                         {{ $p->product_name }} (Tipe: {{ strtoupper($p->price_type) }})
                                     </option>
                                 @endforeach
                             </select>
-                            </div>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Tanggal Input <span class="text-red-500">*</span></label>
-                        <input type="date" name="date_input" max="{{ date('Y-m-d') }}" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200 transition-colors font-medium" value="{{ old('date_input', $isEdit ? \Carbon\Carbon::parse($history->date_input)->format('Y-m-d') : date('Y-m-d')) }}" required>
+                        <input type="date" name="date_input" max="{{ date('Y-m-d') }}" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-200 transition-colors font-medium" value="{{ old('date_input', $isEdit ? \Carbon\Carbon::parse($history->date_input)->format('Y-m-d') : date('Y-m-d')) }}" required>
                     </div>
                 </div>
 
@@ -121,35 +94,57 @@
                     </h6>
                     <div class="p-5 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div>
-                                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">HPP Hari Ini (Rp) <span class="text-red-500">*</span></label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <span class="text-slate-400 font-bold">Rp</span>
-                                    </div>
-                                    <input type="number" step="0.01" min="0" name="hpp" value="{{ old('hpp', $isEdit ? (float)$history->hpp : '') }}" class="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200 transition-colors placeholder-slate-400" placeholder="20000" required>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">HPP Kemarin (Rp)</label>
-                                <div class="relative">
-                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <span class="text-slate-400 font-bold">Rp</span>
-                                    </div>
-                                    <input type="number" step="0.01" min="0" name="hpp_prev" value="{{ old('hpp_prev', ($isEdit && $history->hpp_prev) ? (float)$history->hpp_prev : '') }}" class="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200 transition-colors placeholder-slate-400" placeholder="Opsional">
-                                </div>
-                            </div>
                             
-                            <div>
-                                <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Target Margin (%)</label>
-                               <div class="relative">
-                                    <input type="number" step="0.01" min="0" name="manual_margin" value="{{ old('manual_margin', ($isEdit && $history->margin_percent) ? $history->margin_percent : '') }}" class="w-full px-4 py-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-300 dark:border-amber-700/50 rounded-xl focus:ring-2 focus:ring-amber-500 text-slate-800 dark:text-slate-200 transition-colors placeholder-slate-400" placeholder="Otomatis (Kosongi)">
-                                    <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                                        <span class="text-slate-400 font-bold">%</span>
+                            <div class="flex flex-col gap-4">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-500 mb-1">Yield (Auto)</label>
+                                    <input type="text" id="display_yield" class="w-full px-3 py-2 bg-slate-200 border border-slate-300 rounded-lg text-sm font-bold text-slate-700" readonly placeholder="0%">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">HPP Hari Ini (Rp) <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="text-slate-400 font-bold">Rp</span></div>
+                                        <input type="number" step="0.01" min="0" name="hpp" id="hpp_hari_ini" value="{{ old('hpp', $isEdit ? (float)$history->hpp : '') }}" class="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-200 transition-colors placeholder-slate-400" required>
                                     </div>
                                 </div>
-                                <p class="text-[10px] text-slate-500 mt-1 leading-tight">Isi jika ingin mematok profit sendiri. Kosongi agar sistem menghitung otomatis.</p>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-green-600 mb-1">Final Price (Auto)</label>
+                                    <input type="text" id="display_final" class="w-full px-3 py-2 bg-green-100 border border-green-300 text-green-800 rounded-lg text-sm font-bold shadow-inner" readonly placeholder="Rp 0">
+                                </div>
                             </div>
+
+                            <div class="flex flex-col gap-4">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-amber-600 mb-1">Floor Price (Auto)</label>
+                                    <input type="text" id="display_floor" class="w-full px-3 py-2 bg-amber-100 border border-amber-300 text-amber-800 rounded-lg text-sm font-bold" readonly placeholder="Rp 0">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">HPP Kemarin (Rp)</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="text-slate-400 font-bold">Rp</span></div>
+                                        <input type="number" step="0.01" min="0" name="hpp_prev" id="hpp_kemarin" value="{{ old('hpp_prev', ($isEdit && $history->hpp_prev) ? (float)$history->hpp_prev : '') }}" class="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-200 transition-colors placeholder-slate-400">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-purple-600 mb-1">Margin Real (Auto)</label>
+                                    <input type="text" id="display_margin" class="w-full px-3 py-2 bg-purple-100 border border-purple-300 text-purple-800 rounded-lg text-sm font-bold" readonly placeholder="0%">
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col gap-4">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-blue-600 mb-1">Adjustment (Auto)</label>
+                                    <input type="text" id="display_adj" class="w-full px-3 py-2 bg-blue-100 border border-blue-300 text-blue-800 rounded-lg text-sm font-bold" readonly placeholder="0%">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Target Margin (%)</label>
+                                   <div class="relative">
+                                        <input type="number" step="0.01" min="0" name="manual_margin" id="margin_target" value="{{ old('manual_margin', ($isEdit && $history->margin_percent) ? $history->margin_percent : '') }}" class="w-full px-4 py-3 bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-200 transition-colors placeholder-slate-400">
+                                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none"><span class="text-slate-400 font-bold">%</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -161,15 +156,15 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div>
                             <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Kompetitor 1</label>
-                            <input type="number" step="0.01" min="0" name="c1" value="{{ old('c1', ($isEdit && $history->c1) ? (float)$history->c1 : '') }}" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200 transition-colors placeholder-slate-400" placeholder="Rp (Opsional)">
+                            <input type="number" step="0.01" min="0" name="c1" id="kompetitor_1" value="{{ old('c1', ($isEdit && $history->c1) ? (float)$history->c1 : '') }}" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-200 transition-colors">
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Kompetitor 2</label>
-                            <input type="number" step="0.01" min="0" name="c2" value="{{ old('c2', ($isEdit && $history->c2) ? (float)$history->c2 : '') }}" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200 transition-colors placeholder-slate-400" placeholder="Rp (Opsional)">
+                            <input type="number" step="0.01" min="0" name="c2" id="kompetitor_2" value="{{ old('c2', ($isEdit && $history->c2) ? (float)$history->c2 : '') }}" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-200 transition-colors">
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Kompetitor 3</label>
-                            <input type="number" step="0.01" min="0" name="c3" value="{{ old('c3', ($isEdit && $history->c3) ? (float)$history->c3 : '') }}"class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200 transition-colors placeholder-slate-400" placeholder="Rp (Opsional)">
+                            <input type="number" step="0.01" min="0" name="c3" id="kompetitor_3" value="{{ old('c3', ($isEdit && $history->c3) ? (float)$history->c3 : '') }}"class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-200 transition-colors">
                         </div>
                     </div>
                 </div>
@@ -182,35 +177,30 @@
                         <div>
                             <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Sisa Stok Fisik <span class="text-red-500">*</span></label>
                             <div class="relative">
-                                <input type="number" min="0" name="stock" value="{{ old('stock', $isEdit ? $history->stock : '') }}" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200 transition-colors placeholder-slate-400" placeholder="Contoh: 50" required>
-                                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                                    <span class="text-slate-400 text-sm">Pcs</span>
-                                </div>
+                                <input type="number" min="0" name="stock" id="stok_fisik" value="{{ old('stock', $isEdit ? $history->stock : '') }}" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-200 transition-colors" required>
+                                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none"><span class="text-slate-400 text-sm">Pcs</span></div>
                             </div>
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Demand (Permintaan) <span class="text-red-500">*</span></label>
                             <div class="relative">
-                                <select name="demand" class="w-full pl-4 pr-10 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 dark:text-slate-200 appearance-none transition-colors font-medium" required>
+                                <select name="demand" id="demand" class="w-full pl-4 pr-10 py-3 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 text-slate-800 dark:text-slate-200 appearance-none transition-colors font-medium" required>
                                     <option value="normal" {{ old('demand', $isEdit ? $history->demand : '') == 'normal' ? 'selected' : '' }}>Normal</option>
                                     <option value="tinggi" {{ old('demand', $isEdit ? $history->demand : '') == 'tinggi' ? 'selected' : '' }}>Tinggi (Pasar Ramai)</option>
                                     <option value="rendah" {{ old('demand', $isEdit ? $history->demand : '') == 'rendah' ? 'selected' : '' }}>Rendah (Pasar Sepi)</option>
                                 </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
-                                    <i class="fas fa-chevron-down text-xs"></i>
-                                </div>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400"><i class="fas fa-chevron-down text-xs"></i></div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="flex gap-4">
-                    <button type="submit" class="w-full {{ $isEdit ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/30 focus:ring-indigo-500/50' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/30 focus:ring-blue-500/50' }} text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all hover:-translate-y-1 focus:ring-4 flex justify-center items-center gap-2 text-lg">
+                    <button type="submit" class="w-full {{ $isEdit ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/30' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/30' }} text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all hover:-translate-y-1 focus:ring-4 flex justify-center items-center gap-2 text-lg">
                         <i class="fas {{ $isEdit ? 'fa-save' : 'fa-magic' }}"></i> 
                         {{ $isEdit ? 'Update & Simpan Perubahan' : 'Hitung & Simpan Harga Rekomendasi' }}
                     </button>
                 </div>
-
             </form>
         </div>
     </div>
@@ -219,16 +209,86 @@
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Nyalain si Tom Select di tag ID "select-produk"
-        new TomSelect("#select-produk",{
+        let ts = new TomSelect("#select-produk",{
             create: false,
-            maxOptions: null, // <--- 🔥 INI OBATNYA BIAR SEMUA PRODUK MUNCUL 🔥
-            sortField: {
-                field: "text",
-                direction: "asc" // Otomatis ngurutin produk dari A-Z
-            },
+            maxOptions: null,
+            sortField: { field: "text", direction: "asc" },
             placeholder: "-- Ketik nama produk... --"
         });
+
+        function calculatePricing() {
+            let hpp = parseFloat(document.getElementById('hpp_hari_ini').value) || 0;
+            let hppKemarin = parseFloat(document.getElementById('hpp_kemarin').value) || 0;
+            let marginTarget = parseFloat(document.getElementById('margin_target').value) || 20; 
+            
+            let c1 = parseFloat(document.getElementById('kompetitor_1').value) || 0;
+            let c2 = parseFloat(document.getElementById('kompetitor_2').value) || 0;
+            let c3 = parseFloat(document.getElementById('kompetitor_3').value) || 0;
+            
+            let stok = parseFloat(document.getElementById('stok_fisik').value) || 0;
+            let demand = document.getElementById('demand').value || 'normal';
+
+            let selectEl = document.getElementById('select-produk');
+            let selectedOpt = selectEl.options[selectEl.selectedIndex];
+            
+            let yieldPercent = parseFloat(selectedOpt.getAttribute('data-yield')) || 95;
+            let buffer = parseFloat(selectedOpt.getAttribute('data-buffer')) || 5;
+            let threshold = parseFloat(selectedOpt.getAttribute('data-threshold')) || 20;
+
+            if (hpp === 0) return;
+
+            let yieldDecimal = yieldPercent / 100;
+            let hppReal = hpp / yieldDecimal;
+
+            let bufferDecimal = buffer / 100;
+            let floorPrice = hppReal * (1 + bufferDecimal);
+
+            let comps = [c1, c2, c3].filter(c => c > 0).sort((a, b) => a - b);
+            let medianMarket = 0;
+            if(comps.length > 0) {
+                let mid = Math.floor(comps.length / 2);
+                medianMarket = comps.length % 2 !== 0 ? comps[mid] : (comps[mid - 1] + comps[mid]) / 2;
+            } else {
+                medianMarket = hppReal; 
+            }
+
+            let marginDecimal = marginTarget / 100;
+            let basePrice = marginDecimal < 1 ? (hppReal / (1 - marginDecimal)) : hppReal;
+
+            let adjustment = 0;
+            if (hpp > hppKemarin && hppKemarin > 0) adjustment += 0.03; 
+            if (demand === 'tinggi') adjustment += 0.03; 
+            if (stok < threshold && threshold > 0) adjustment += 0.02; 
+
+            let adjustedPrice = basePrice * (1 + adjustment);
+
+            let tempPrice = (adjustedPrice + medianMarket) / 2;
+            let finalPrice = tempPrice > floorPrice ? tempPrice : floorPrice;
+
+            let marginReal = 0;
+            if (finalPrice > 0) {
+                marginReal = ((finalPrice - hppReal) / finalPrice) * 100;
+            }
+
+            document.getElementById('display_yield').value = yieldPercent + '%';
+            document.getElementById('display_floor').value = 'Rp ' + Math.round(floorPrice).toLocaleString('id-ID');
+            document.getElementById('display_adj').value = (adjustment * 100).toFixed(1) + '%';
+            document.getElementById('display_final').value = 'Rp ' + Math.round(finalPrice).toLocaleString('id-ID');
+            document.getElementById('display_margin').value = marginReal.toFixed(2) + '%';
+        }
+
+        ts.on('change', calculatePricing);
+        
+        const inputs = ['hpp_hari_ini', 'hpp_kemarin', 'margin_target', 'kompetitor_1', 'kompetitor_2', 'kompetitor_3', 'stok_fisik', 'demand'];
+        inputs.forEach(id => {
+            let el = document.getElementById(id);
+            if(el) {
+                el.addEventListener('input', calculatePricing);
+                el.addEventListener('change', calculatePricing); 
+            }
+        });
+
+        calculatePricing();
     });
 </script>
 @endsection
