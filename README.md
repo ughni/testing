@@ -1,59 +1,125 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <div style="background-color: #1e293b; padding: 20px; border-radius: 15px; text-align: center;">
+    <h1 style="color: #38bdf8; font-size: 3em; margin-bottom: 0;">🔥 PRICING ENGINE ERP 🔥</h1>
+    <p style="color: #94a3b8; font-size: 1.2em;">Smart Inventory, Purchase Plan & Dynamic Pricing System</p>
+  </div>
 </p>
 
-## About Laravel
+## 🚀 Tentang Aplikasi
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+**Pricing Engine ERP** adalah sistem *Enterprise Resource Planning* khusus yang dirancang untuk mengotomatisasi perhitungan Harga Pokok Penjualan (HPP), manajemen Master Produk, dan Rencana Pembelian (Purchase Plan). 
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Sistem ini dilengkapi dengan **Kecerdasan Buatan (Auto Adjustment)** yang mampu merespon fluktuasi harga pasar, tingkat *demand*, dan ketersediaan stok secara *real-time*, memastikan perusahaan selalu mendapatkan margin yang optimal tanpa melanggar ketentuan kontrak dari *Supplier*.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## ✨ Fitur Unggulan
 
-## Learning Laravel
+- 🧮 **Smart Pricing Calculator:** Perhitungan HPP komprehensif (termasuk *Yield*, Pajak, dan Ongkos Kirim) dengan kalkulasi *Floor Price*, *Base Price*, dan *Median* Kompetitor.
+- 🤖 **Auto Adjustment Rules:** Penyesuaian harga otomatis berdasarkan:
+  - Inflasi (Kenaikan HPP)
+  - Tingkat Permintaan Pasar (*Demand* Tinggi/Rendah)
+  - Ketersediaan Stok Kritis (*Panic Buying Protection*)
+- 📦 **Purchase Plan & Restock Radar:** Sistem pengajuan *Purchase Order* (PO) otomatis untuk barang kritis, validasi Manajer, dan sinkronisasi penambahan stok langsung ke Master Produk.
+- 🤝 **Supplier Contract Manager:** Logika harga yang patuh pada kontrak *Supplier* (Fixed Price, Consignment/Titipan, HET/Harga Eceran Tertinggi, dan Dynamic).
+- 🔐 **API Gateway & Webhooks:** Distribusi harga *real-time* ke aplikasi pihak ketiga (seperti POS Kasir atau E-Commerce) menggunakan otentikasi *Secret API Key*.
+- 📊 **Reporting:** Fitur cetak PO dalam format PDF, Export/Import Master Data menggunakan Excel, dan sistem *Audit Log* untuk melacak seluruh aktivitas pengguna.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## 🛠️ Tech Stack
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **Framework:** Laravel 10+ / 11
+- **Database:** MySQL / PostgreSQL
+- **Frontend:** Tailwind CSS, Alpine.js / jQuery, Select2
+- **Export/PDF:** DomPDF, Laravel Excel (Maatwebsite)
 
-## Laravel Sponsors
+## ⚙️ Cara Instalasi (Development)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+1. Clone repository ini:
+   ```bash
+   git clone [https://github.com/](https://github.com/)[username-anda]/pricing-engine-erp.git
+Masuk ke direktori proyek dan instal dependencies:
 
-### Premium Partners
+Bash
+cd pricing-engine-erp
+composer install
+npm install && npm run build
+Salin dan konfigurasi file .env:
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Bash
+cp .env.example .env
+Generate Application Key dan jalankan migrasi database:
 
-## Contributing
+Bash
+php artisan key:generate
+php artisan migrate --seed
+Jalankan server lokal:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Bash
+php artisan serve
+📡 DOKUMENTASI API (Untuk Integrasi Aplikasi Klien)
+Sistem ini menyediakan RESTful API untuk mendistribusikan data harga terbaru ke aplikasi klien secara aman.
 
-## Code of Conduct
+🔑 Autentikasi
+Semua permintaan (Request) ke API WAJIB menyertakan API Key yang valid di dalam Header HTTP. API Key dapat dibuat melalui menu API Integration & Webhooks di dalam dashboard aplikasi ERP.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+📍 Endpoint: Ambil Data Harga Barang
+Mendapatkan daftar harga jual rekomendasi yang sudah dikalkulasi oleh Pricing Engine.
 
-## Security Vulnerabilities
+URL: /api/get-harga-barang
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Method: GET
 
-## License
+Headers Wajib:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+x-api-key: [Token API Anda]
+
+Accept: application/json
+
+💻 Contoh Penggunaan (JavaScript / Fetch API)
+Bagi developer aplikasi Klien (misal: POS Kasir), silakan gunakan contoh kode berikut untuk mengambil data dari server ERP:
+
+JavaScript
+fetch('[http://domain-erp-anda.com/api/get-harga-barang](http://domain-erp-anda.com/api/get-harga-barang)', {
+    method: 'GET',
+    headers: {
+        // Ganti dengan API Key yang di-generate dari Dashboard ERP
+        'x-api-key': 'prc_TokenPanjangAnda1234567890',
+        'Accept': 'application/json'
+    }
+})
+.then(response => {
+    if (!response.ok) {
+        throw new Error('Akses Ditolak! API Key tidak valid atau telah dicabut.');
+    }
+    return response.json();
+})
+.then(data => {
+    console.log("Data Harga Berhasil Ditarik:", data);
+    // Lakukan proses render ke UI Kasir Anda di sini
+})
+.catch(error => console.error("Error:", error));
+📄 Contoh Respon Berhasil (200 OK)
+JSON
+{
+  "pesan": "Akses Diterima! Halo POS Kasir Cabang 1",
+  "data": [
+    {
+      "product_name": "Beras Premium 5Kg",
+      "category": "Sembako",
+      "stock": 45,
+      "final_price": 66500
+    },
+    {
+      "product_name": "Minyak Goreng 2L",
+      "category": "Sembako",
+      "stock": 15,
+      "final_price": 32000
+    }
+  ]
+}
+📄 Contoh Respon Gagal (401 Unauthorized)
+(Terjadi jika API Key salah, kosong, atau aksesnya sudah di-Revoke oleh Admin)
+
+JSON
+{
+  "pesan": "Akses Ditolak! API Key tidak valid atau sudah mati."
+}
+<p align="center"><i>Dikembangkan untuk operasional bisnis yang efisien dan akurat.</i></p>

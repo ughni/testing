@@ -78,7 +78,6 @@ class PurchasePlanController extends Controller
         $count = 0;
 
         foreach ($pendingProducts as $productName) {
-            // 1. Ambil SEMUA penawaran untuk produk ini, jejerin dari yang PALING MURAH
             $offers = SupplierOffer::where('product_name', $productName)
                                 ->where('status', 'pending')
                                 ->orderBy('price', 'asc') 
@@ -86,11 +85,10 @@ class PurchasePlanController extends Controller
 
             $cheapestValidOffer = null;
 
-            // 2. INTEROGASI SATPAM KONTRAK (RADAR HELIKOPTER ANTI BUG PHP)
             foreach ($offers as $offer) {
                 $namaSupplierBersih = trim($offer->supplier_name);
                 $supplier = \App\Models\Supplier::where('nama_supplier', 'LIKE', '%' . $namaSupplierBersih . '%')->first();
-                $isLegal = false; // Anggap ilegal dulu
+                $isLegal = false; 
 
                 if ($supplier) {
                     $latestContract = \App\Models\SupplierContract::where('supplier_id', $supplier->id)
@@ -98,43 +96,48 @@ class PurchasePlanController extends Controller
                                         ->first();
 
                     if ($latestContract && !empty($latestContract->valid_until)) {
-                        $tanggalHabis = \Carbon\Carbon::parse($latestContract->valid_until)->endOfDay();
+                        $tanggalHabis = Carbon::parse($latestContract->valid_until)->endOfDay();
                         if ($tanggalHabis->isFuture() || $tanggalHabis->isToday()) {
-                            $isLegal = true; // TERBUKTI AMAN!
+                            $isLegal = true; 
                         }
                     }
                 }
 
-                // Kalau dia LEGAL (Aman), langsung pilih dia dan BERHENTI nyari!
                 if ($isLegal) {
                     $cheapestValidOffer = $offer;
                     break; 
                 }
             }
 
-            // 3. Eksekusi kalau dapet yang Legal & Termurah!
             if ($cheapestValidOffer) {
-                // 🔥 AMBIL QTY ASLI DARI PENAWARAN (Bukan 10 lagi!) 🔥
                 $qtyAsli = $cheapestValidOffer->qty ?? 1;
 
-                // Set ACC
                 $cheapestValidOffer->update([
                     'status' => 'approved'
                 ]);
                 $count++;
 
-                // LOGIKA AUTO-LINK & TAMBAH STOK OTOMATIS!
+                // 🔥 LOGIKA AUTO-CREATE & SINKRONISASI MASTER PRODUK 🔥
+                $supplier = \App\Models\Supplier::where('nama_supplier', trim($cheapestValidOffer->supplier_name))->first();
+                $supplier_id = $supplier ? $supplier->id : null;
                 $product = Product::where('product_name', $cheapestValidOffer->product_name)->first();
+
                 if ($product) {
-                    $supplier = \App\Models\Supplier::where('nama_supplier', trim($cheapestValidOffer->supplier_name))->first();
-                    if ($supplier) {
-                        $product->supplier_id = $supplier->id;
-                    }
-                    // 🔥 Tambah Brankas Stok SESUAI QTY ASLI! 🔥
-                    $product->increment('stock', $qtyAsli);
+                    if ($supplier_id) $product->supplier_id = $supplier_id;
+                    $product->stock = $product->stock + (int) $qtyAsli;
+                    $product->save();
+                } else {
+                    $newProd = new Product();
+                    $newProd->product_name = $cheapestValidOffer->product_name;
+                    $newProd->supplier_id  = $supplier_id;
+                    $newProd->stock        = (int) $qtyAsli;
+                    $newProd->unit         = $cheapestValidOffer->unit ?? 'Pcs';
+                    $newProd->price_type   = 'dynamic';
+                    $newProd->category     = 'Produk Beli';
+                    $newProd->is_active    = true;
+                    $newProd->save();
                 }
                 
-                // Buang sisa penawaran yang kalah saing / ilegal
                 SupplierOffer::where('product_name', $productName)
                         ->where('status', 'pending')
                         ->where('id', '!=', $cheapestValidOffer->id)
@@ -156,6 +159,7 @@ class PurchasePlanController extends Controller
 
         return redirect()->back()->with('success', " $count Produk berhasil dipilih OTOMATIS dari supplier LEGAL TERMURAH!");
     }
+
     public function approve($id)
     {
         $offer = SupplierOffer::findOrFail($id);
@@ -166,15 +170,25 @@ class PurchasePlanController extends Controller
                 ->where('id', '!=', $offer->id)
                 ->update(['status' => 'rejected']);
 
-        // 🔥 TAHAP 2 (B): LOGIKA AUTO-LINK & TAMBAH STOK MANUAL! 🔥
+        // 🔥 LOGIKA AUTO-CREATE & SINKRONISASI MASTER PRODUK 🔥
+        $supplier = \App\Models\Supplier::where('nama_supplier', trim($offer->supplier_name))->first();
+        $supplier_id = $supplier ? $supplier->id : null;
         $product = Product::where('product_name', $offer->product_name)->first();
+
         if ($product) {
-            $supplier = \App\Models\Supplier::where('nama_supplier', $offer->supplier_name)->first();
-            if ($supplier) {
-                $product->supplier_id = $supplier->id;
-            }
-            // Tambah Brankas Stok sesuai jumlah Qty yang ada di penawaran!
-            $product->increment('stock', (int) $offer->qty);
+            if ($supplier_id) $product->supplier_id = $supplier_id;
+            $product->stock = $product->stock + (int) $offer->qty;
+            $product->save();
+        } else {
+            $newProd = new Product();
+            $newProd->product_name = $offer->product_name;
+            $newProd->supplier_id  = $supplier_id;
+            $newProd->stock        = (int) $offer->qty;
+            $newProd->unit         = $offer->unit ?? 'Pcs';
+            $newProd->price_type   = 'dynamic';
+            $newProd->category     = 'Produk Beli';
+            $newProd->is_active    = true;
+            $newProd->save();
         }
 
         AuditLog::create([
@@ -238,12 +252,12 @@ class PurchasePlanController extends Controller
     {
         $offer = SupplierOffer::findOrFail($id);
 
-        // 🔥 TAHAP 2 (BONUS): TARIK BALIK STOK KALAU MANAJER BATALIN ACC! 🔥
         if ($offer->status === 'approved') {
             $product = Product::where('product_name', $offer->product_name)->first();
             if ($product) {
-                // Kurangi stok sebesar Qty yang sebelumnya udah di-ACC biar gak bocor
-                $product->decrement('stock', (int) $offer->qty);
+                // Tarik balik stok kalau dibatalkan
+                $product->stock = $product->stock - (int) $offer->qty;
+                $product->save();
             }
         }
 
@@ -289,18 +303,31 @@ class PurchasePlanController extends Controller
         return Excel::download(new ProcessPlanExport, 'Laporan_Validasi_Harga_' . date('Y-m-d') . '.xlsx');
     }
 
-  // 🔥 FITUR ARSIPKAN 1 BARANG & NAMBAH STOK 🔥
+    // 🔥 FITUR ARSIPKAN 1 BARANG & AUTO CREATE MASTER PRODUK 🔥
     public function archive($id)
     {
         $offer = SupplierOffer::findOrFail($id);
-        
-        // 1. Ubah status jadi 'completed' (Arsip)
         $offer->update(['status' => 'completed']);
 
-        // 2. OTOMATIS TAMBAH STOK KE MASTER PRODUK!
+        // 🔥 LOGIKA AUTO-CREATE & SINKRONISASI MASTER PRODUK 🔥
+        $supplier = \App\Models\Supplier::where('nama_supplier', trim($offer->supplier_name))->first();
+        $supplier_id = $supplier ? $supplier->id : null;
         $product = Product::where('product_name', $offer->product_name)->first();
-        if($product) {
-            $product->increment('stock', $offer->qty);
+
+        if ($product) {
+            if ($supplier_id) $product->supplier_id = $supplier_id;
+            $product->stock = $product->stock + (int) $offer->qty;
+            $product->save();
+        } else {
+            $newProd = new Product();
+            $newProd->product_name = $offer->product_name;
+            $newProd->supplier_id  = $supplier_id;
+            $newProd->stock        = (int) $offer->qty;
+            $newProd->unit         = $offer->unit ?? 'Pcs';
+            $newProd->price_type   = 'dynamic';
+            $newProd->category     = 'Produk Beli';
+            $newProd->is_active    = true;
+            $newProd->save();
         }
 
         AuditLog::create([
@@ -311,23 +338,37 @@ class PurchasePlanController extends Controller
             'ip_address' => request()->ip()
         ]);
 
-        return redirect()->back()->with('success', 'PO diarsipkan & Stok Gudang berhasil bertambah!');
+        return redirect()->back()->with('success', 'PO diarsipkan & Produk Otomatis Masuk Master/Gudang!');
     }
 
-    // 🔥 FITUR ARSIPKAN SEMUA SEKALIGUS (SAPU BERSIH) & NAMBAH STOK 🔥
+    // 🔥 FITUR ARSIPKAN SEMUA SEKALIGUS (SAPU BERSIH) & AUTO CREATE MASTER PRODUK 🔥
     public function archiveAll()
     {
         $offers = SupplierOffer::where('status', 'approved')->get();
         $count = $offers->count();
 
         foreach($offers as $offer) {
-            // 1. Arsipkan
             $offer->update(['status' => 'completed']);
             
-            // 2. OTOMATIS TAMBAH STOK KE MASTER PRODUK!
+            // 🔥 LOGIKA AUTO-CREATE & SINKRONISASI MASTER PRODUK 🔥
+            $supplier = \App\Models\Supplier::where('nama_supplier', trim($offer->supplier_name))->first();
+            $supplier_id = $supplier ? $supplier->id : null;
             $product = Product::where('product_name', $offer->product_name)->first();
-            if($product) {
-                $product->increment('stock', $offer->qty);
+
+            if ($product) {
+                if ($supplier_id) $product->supplier_id = $supplier_id;
+                $product->stock = $product->stock + (int) $offer->qty;
+                $product->save();
+            } else {
+                $newProd = new Product();
+                $newProd->product_name = $offer->product_name;
+                $newProd->supplier_id  = $supplier_id;
+                $newProd->stock        = (int) $offer->qty;
+                $newProd->unit         = $offer->unit ?? 'Pcs';
+                $newProd->price_type   = 'dynamic';
+                $newProd->category     = 'Produk Beli';
+                $newProd->is_active    = true;
+                $newProd->save();
             }
         }
 
@@ -339,6 +380,6 @@ class PurchasePlanController extends Controller
             'ip_address' => request()->ip()
         ]);
 
-        return redirect()->back()->with('success', "Mantap! $count Barang diarsipkan & Stoknya otomatis masuk Gudang!");
+        return redirect()->back()->with('success', "Mantap! $count Barang diarsipkan & Otomatis masuk Master Produk/Gudang!");
     }
 }

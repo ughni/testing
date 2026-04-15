@@ -146,35 +146,47 @@
             @csrf
             <input type="hidden" name="_method" id="formMethod" value="POST">
             
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap *</label>
-                    <input type="text" name="name" id="inp_name" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm text-slate-800 dark:text-white transition-all">
-                </div>
-                
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email Login *</label>
-                    <input type="email" name="email" id="inp_email" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm text-slate-800 dark:text-white transition-all">
-                </div>
-                
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Hak Akses (Role) *</label>
-                    <div class="relative">
-                        <select name="role" id="inp_role" required class="w-full pl-4 pr-10 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm font-bold text-slate-800 dark:text-white appearance-none transition-all cursor-pointer">
-                            <option value="administrator">Administrator (Full Akses)</option>
-                            <option value="manager">Manager Operasional</option>
-                            <option value="staff">Staff Biasa</option>
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400"><i class="fas fa-chevron-down text-xs"></i></div>
-                    </div>
-                </div>
+      <div class="space-y-4">
+    <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap *</label>
+        <input type="text" name="name" id="inp_name" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm text-slate-800 dark:text-white transition-all">
+    </div>
+    
+    <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email Login *</label>
+        <input type="email" name="email" id="inp_email" required class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm text-slate-800 dark:text-white transition-all">
+    </div>
+    
+    <div>
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Hak Akses (Role) *</label>
+        <div class="relative">
+            <select name="role" id="inp_role" required class="w-full pl-4 pr-10 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm font-bold text-slate-800 dark:text-white appearance-none transition-all cursor-pointer">
+                <option value="administrator">Administrator (Full Akses)</option>
+                <option value="manager">Manager Operasional</option>
+                <option value="staff">Staff Biasa</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400"><i class="fas fa-chevron-down text-xs"></i></div>
+        </div>
+    </div>
 
-                <div class="pt-2 border-t border-slate-100 dark:border-slate-700">
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Password <span id="passReq">*</span></label>
-                    <input type="password" name="password" id="inp_password" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm text-slate-800 dark:text-white transition-all">
-                    <p id="passHint" class="text-[10px] text-slate-500 mt-1.5 font-medium"><i class="fas fa-info-circle text-indigo-400"></i> Minimal 6 karakter.</p>
-                </div>
-            </div>
+    <div id="wrap_add_pass" class="pt-2 border-t border-slate-100 dark:border-slate-700">
+        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Password Baru *</label>
+        <input type="password" name="password" id="inp_password" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm text-slate-800 dark:text-white transition-all">
+        <p class="text-[10px] text-slate-500 mt-1.5 font-medium"><i class="fas fa-info-circle text-indigo-400"></i> Minimal 6 karakter.</p>
+    </div>
+
+    <div id="wrap_edit_pass" class="hidden pt-2 border-t border-slate-100 dark:border-slate-700 space-y-3">
+        <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Password Saat Ini (Password Lama)</label>
+            <input type="password" name="password_lama" id="inp_password_lama" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm text-slate-800 dark:text-white transition-all" placeholder="Ketik sandi saat ini jika ingin diubah">
+        </div>
+        <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Password Baru</label>
+            <input type="password" name="password_baru" id="inp_password_baru" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm text-slate-800 dark:text-white transition-all" placeholder="Ketik sandi baru">
+            <p class="text-[10px] text-amber-500 mt-1.5 font-medium"><i class="fas fa-exclamation-triangle"></i> Biarkan kedua kotak password kosong jika tidak ingin mengubah sandi.</p>
+        </div>
+    </div>
+</div>
 
             <div class="flex justify-end gap-3 mt-6">
                 <button type="button" onclick="closeModal()" class="px-5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-600 dark:hover:bg-slate-700 dark:text-slate-300 text-slate-700 rounded-xl font-bold transition-all text-xs">Batal</button>
@@ -187,13 +199,15 @@
 </div>
 
 <script>
-    function openModal(mode, data = null) {
+    function openModal(mode, rawData = null) {
         const modal = document.getElementById('modalUser');
         const form = document.getElementById('userForm');
         const title = document.getElementById('modalTitle');
         const method = document.getElementById('formMethod');
-        const passReq = document.getElementById('passReq');
-        const passHint = document.getElementById('passHint');
+        
+        // Panggil elemen wrapper password
+        const wrapAdd = document.getElementById('wrap_add_pass');
+        const wrapEdit = document.getElementById('wrap_edit_pass');
         const inpPass = document.getElementById('inp_password');
 
         if(mode === 'add') {
@@ -202,22 +216,35 @@
             method.value = "POST";
             form.reset();
             
+            // Atur tampilan kotak password
+            wrapAdd.classList.remove('hidden');
+            wrapEdit.classList.add('hidden');
             inpPass.required = true;
-            passReq.style.display = 'inline';
-            passHint.innerHTML = '<i class="fas fa-info-circle text-indigo-400"></i> Minimal 6 karakter.';
         } else {
+            // Mode Edit: Buka bungkusan JSON
+            const data = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+
             title.innerHTML = '<i class="fas fa-user-edit mr-2"></i> Edit Data User';
             form.action = `/users/${data.id}`;
             method.value = "PUT";
             
+            // Masukin data ke kotak
             document.getElementById('inp_name').value = data.name;
             document.getElementById('inp_email').value = data.email;
-            document.getElementById('inp_role').value = data.role;
             
+            // Trik jitu: pastikan role huruf kecil biar match sama <option>
+            if(data.role) {
+                document.getElementById('inp_role').value = data.role.toLowerCase();
+            }
+            
+            // Atur tampilan kotak password Edit
+            wrapAdd.classList.add('hidden');
+            wrapEdit.classList.remove('hidden');
             inpPass.required = false;
-            inpPass.value = '';
-            passReq.style.display = 'none';
-            passHint.innerHTML = '<i class="fas fa-exclamation-triangle text-amber-500"></i> Kosongkan jika tidak ingin mengubah password.';
+            
+            // Kosongkan isian password lama/baru
+            document.getElementById('inp_password_lama').value = '';
+            document.getElementById('inp_password_baru').value = '';
         }
 
         modal.classList.remove('hidden');
@@ -225,9 +252,8 @@
     }
 
     function closeModal() {
-        const modal = document.getElementById('modalUser');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
+        document.getElementById('modalUser').classList.add('hidden');
+        document.getElementById('modalUser').classList.remove('flex');
     }
 </script>
 @endsection

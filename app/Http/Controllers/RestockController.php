@@ -11,15 +11,14 @@ use Illuminate\Support\Facades\Auth;
 
 class RestockController extends Controller
 {
- // 1. Nampilin Halaman (Tabel Atas: Alarm, Tabel Bawah: Keranjang)
-
-public function index(Request $request)
+    // 1. Nampilin Halaman (Tabel Atas: Alarm, Tabel Bawah: Keranjang)
+    public function index(Request $request)
     {
         // 🔥 1. CEK MEJA MANAGER (Pending / Approved) 🔥
         $barangLagiDipesan = SupplierOffer::whereIn('status', ['pending', 'approved'])
-                                                      ->pluck('product_name')
-                                                      ->filter()
-                                                      ->toArray();
+                                          ->pluck('product_name')
+                                          ->filter()
+                                          ->toArray();
 
         $search = $request->input('search');
         
@@ -49,7 +48,6 @@ public function index(Request $request)
         return view('restock.index', compact('products', 'suppliers', 'restockPlans', 'search'));
     }
 
- 
     // 2. Proses masukin ke Keranjang (Lempar ke Purchase Plan)
     public function processReorder(Request $request)
     {
@@ -67,7 +65,7 @@ public function index(Request $request)
             'price'         => $request->price,
             'qty'           => $request->qty,
             'unit'          => $request->unit,
-            // 🔥 UBAH: Langsung lempar statusnya ke 'pending' biar terbang ke meja Manager di Purchase Plan!
+            // 🔥 Langsung lempar statusnya ke 'pending' biar terbang ke meja Manager di Purchase Plan!
             'status'        => 'pending', 
             'offer_date'    => now(),
         ]);

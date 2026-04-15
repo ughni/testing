@@ -126,22 +126,18 @@ class SupplierController extends Controller
     }
 
     /**
-     * ANALISA HARGA HARIAN (Versi 1 Tabel & Filter Lengkap)
+     * PRODUK PER SUPPLIER (Tampilan Sesuai DB Pak Yudhi - Aturan Kontrak)
      */
     public function productsPerSupplier(Request $request)
     {
         $searchProduct = $request->input('search_product');
         $searchSupplier = $request->input('search_supplier');
-        $period = $request->input('period');
         $searchCategory = $request->input('category');
 
-        // 🔥 UDAH DIPERBAIKI: dailyPricings & date_input 🔥
-        $query = \App\Models\Product::with(['supplier', 'dailyPricings' => function ($q) {
-            $q->orderBy('date_input', 'desc'); 
-        }]);
+        $query = \App\Models\Product::with(['supplier']);
 
         if (! empty($searchCategory)) {
-            $query->where('category', $request->category);
+            $query->where('category', $searchCategory);
         }
 
         if (! empty($searchProduct)) {
@@ -154,22 +150,10 @@ class SupplierController extends Controller
             });
         }
 
-        // 🔥 UDAH DIPERBAIKI: dailyPricings & date_input di Filter Waktu 🔥
-        if (! empty($period) && $period != 'all') {
-            $query->whereHas('dailyPricings', function ($q) use ($period) {
-                if ($period == 'today') {
-                    $q->whereDate('date_input', \Carbon\Carbon::today());
-                } elseif ($period == 'week') {
-                    $q->whereDate('date_input', '>=', \Carbon\Carbon::now()->subDays(7));
-                } elseif ($period == 'month') {
-                    $q->whereMonth('date_input', \Carbon\Carbon::now()->month)
-                        ->whereYear('date_input', \Carbon\Carbon::now()->year);
-                }
-            });
-        }
-
+        // Tampilkan data Pagination
         $products = $query->latest('updated_at')->paginate(10);
 
+        // Untuk Dropdown Filter
         $suppliers = Supplier::select('nama_supplier')->distinct()->orderBy('nama_supplier', 'asc')->get();
         $allProductsList = \App\Models\Product::select('product_name')->distinct()->orderBy('product_name', 'asc')->get();
 
@@ -238,22 +222,46 @@ class SupplierController extends Controller
         return redirect()->back()->with('success', 'Aman! Kontrak berhasil diupload.');
     }
 
-public function contractHistory()
+    public function contractHistory()
     {
-        // 1. Narik semua data kontrak sekalian "gandeng" data supplier-nya
         $contracts = \App\Models\SupplierContract::with('supplier')->orderBy('created_at', 'desc')->get();
         
-        // 🔥 BOM SIDAK (DD) KITA TARUH DI SINI 🔥
-        // Pake toArray() biar pas tampil di browser datanya langsung kebuka semua
-        dd($contracts->toArray());
-
-        // 2. Logika buat nyari versi kontrak tertinggi (Max Version)
         $maxVersions = \App\Models\SupplierContract::selectRaw('supplier_id, MAX(contract_version) as max_version')
             ->groupBy('supplier_id')
             ->pluck('max_version', 'supplier_id');
 
-        // 3. Lempar datanya ke file Blade (Kalo DD di atas dihapus, baru ini jalan)
         return view('suppliers.contract_history', compact('contracts', 'maxVersions'));
     }
-    
+
+    // ==========================================
+    // 🔥 FUNGSI BARU: UPDATE KONTRAK HARGA (HET/Consignment/Fixed) 🔥
+    // ==========================================
+    public function updateProductContract(Request $request, $id)
+    {
+        $product = \App\Models\Product::findOrFail($id);
+
+        $request->validate([
+            'price_type' => 'required|in:dynamic,consignment,het,fixed',
+            'het_price' => 'nullable|numeric|min:0',
+            'consignment_margin' => 'nullable|numeric|min:0',
+            'selling_price_fixed' => 'nullable|numeric|min:0',
+        ]);
+
+        $product->update([
+            'price_type' => $request->price_type,
+            'het_price' => $request->price_type == 'het' ? $request->het_price : null,
+            'consignment_margin' => $request->price_type == 'consignment' ? $request->consignment_margin : null,
+            'selling_price_fixed' => $request->price_type == 'fixed' ? $request->selling_price_fixed : null,
+        ]);
+
+        AuditLog::create([
+            'user_id' => Auth::id() ?? 1,
+            'action' => 'UPDATE',
+            'module' => 'Produk per Supplier',
+            'description' => "Memperbarui aturan kontrak harga ({$request->price_type}) untuk produk: {$product->product_name}.",
+            'ip_address' => $request->ip(),
+        ]);
+
+        return redirect()->back()->with('success', 'Aturan Kontrak Harga berhasil diperbarui, Bos!');
+    }
 }

@@ -1,6 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+    body, table, th, td, h1, h3, p, a, span { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; }
+</style>
 @php
     // 🔥 HACKING JENIUS: Ngitung langsung dari Database, bodo amat sama Controller! 🔥
     $totalRed = \App\Models\DailyPricing::where('status_margin', 'RED')->count();

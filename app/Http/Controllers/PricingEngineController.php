@@ -115,7 +115,7 @@ class PricingEngineController extends Controller
         return view('pricing.index', compact('history', 'products'));
     }
 
-public function updateHistory(Request $request, $id)
+    public function updateHistory(Request $request, $id)
     {
         if ($request->filled('demand')) {
             $request->merge([
@@ -207,7 +207,7 @@ public function updateHistory(Request $request, $id)
     // ==========================================
     // FUNGSI PRIVATE: OTAK PRICING ENGINE (100% DINAMIS DARI DATABASE SETTINGS)
     // ==========================================
-  public function runPricingEngine(Request $request, $product)
+    public function runPricingEngine(Request $request, $product)
     {
         $globalSetting = \App\Models\FormulaSetting::first();
 
@@ -291,21 +291,35 @@ public function updateHistory(Request $request, $id)
 
         $dynamic_price = max($temp_price, $floor_price);
 
-        // 5. HARGA FINAL BERDASARKAN TIPE PRODUK
-        if (strtolower($product->price_type) === 'consignment') {
-            if (! empty($product->selling_price_fixed)) {
-                $finalPrice = $product->selling_price_fixed;
-            } else {
-                $margin_titipan = isset($product->consignment_margin) ? $product->consignment_margin : 0.10;
-                if ($margin_titipan >= 1) {
-                    $margin_titipan = 0.99;
-                }
-                $finalPrice = $hpp / (1 - $margin_titipan);
+        // ========================================================
+        // 5. HARGA FINAL BERDASARKAN TIPE PRODUK (SINKRON KONTRAK)
+        // ========================================================
+        $priceType = strtolower($product->price_type ?? 'dynamic');
+
+        if ($priceType === 'fixed') {
+            // 🛑 MODE HARGA MATI (FIXED)
+            $finalPrice = (isset($product->selling_price_fixed) && $product->selling_price_fixed > 0) 
+                            ? $product->selling_price_fixed 
+                            : $dynamic_price;
+
+        } 
+        elseif ($priceType === 'consignment') {
+            // 🤝 MODE BARANG TITIPAN (CONSIGNMENT)
+            $margin_titipan = isset($product->consignment_margin) ? ($product->consignment_margin / 100) : 0.10;
+            if ($margin_titipan >= 1) {
+                $margin_titipan = 0.99; // Cegah error matematika
             }
-        } elseif (strtoupper($product->price_type) === 'HET') {
-            $het_price = isset($product->het_price) ? $product->het_price : 999999999;
+            $finalPrice = $hpp / (1 - $margin_titipan);
+
+        } 
+        elseif ($priceType === 'het') {
+            // ⚠️ MODE MENTOK PLAFON (HET)
+            $het_price = (isset($product->het_price) && $product->het_price > 0) ? $product->het_price : 999999999;
             $finalPrice = ($dynamic_price > $het_price) ? $het_price : $dynamic_price;
-        } else {
+
+        } 
+        else {
+            // 🚀 MODE DYNAMIC (Bebas Lepas)
             $finalPrice = $dynamic_price;
         }
 

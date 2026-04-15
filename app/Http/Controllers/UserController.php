@@ -40,29 +40,40 @@ class UserController extends Controller
         return back()->with('success', 'User baru berhasil ditambahkan!');
     }
 
-    public function update(Request $request, $id)
-    {
-        $user = User::findOrFail($id);
+  public function update(Request $request, $id)
+{
+    $user = User::findOrFail($id);
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
-            'role' => 'required|in:administrator,manager,staff',
-        ]);
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
+        'role' => 'required|in:administrator,manager,staff',
+    ]);
 
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->role = $request->role;
-        
-        // Update password cuma kalau diisi
-        if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
+    $user->name = $request->name;
+    $user->email = $request->email;
+    $user->role = $request->role;
+    
+    // CEK FITUR GANTI PASSWORD BREYY!
+    if ($request->filled('password_baru')) {
+        // 1. Wajib masukin password lama dulu
+        if (!$request->filled('password_lama')) {
+            return back()->with('error', 'Password Saat Ini harus diisi jika ingin mengganti sandi!');
         }
 
-        $user->save();
+        // 2. Cek apakah password lama yang diketik COCOK sama yang di database
+        if (!Hash::check($request->password_lama, $user->password)) {
+            return back()->with('error', 'Gagal! Password Saat Ini salah.');
+        }
 
-        return back()->with('success', 'Data User berhasil diperbarui!');
+        // 3. Kalau cocok, baru ganti passwordnya!
+        $user->password = Hash::make($request->password_baru);
     }
+
+    $user->save();
+
+    return back()->with('success', 'Data User berhasil diperbarui!');
+}
 
     public function destroy($id)
     {
